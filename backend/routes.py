@@ -35,7 +35,7 @@ def count():
 ######################################################################
 @app.route("/picture", methods=["GET"])
 def get_pictures():
-    pass
+    return data
 
 ######################################################################
 # GET A PICTURE
@@ -44,7 +44,11 @@ def get_pictures():
 
 @app.route("/picture/<int:id>", methods=["GET"])
 def get_picture_by_id(id):
-    pass
+    for picture in data:
+        if picture["id"] == id:
+            return picture
+    return {"message": "picture not found"}, 404
+    
 
 
 ######################################################################
@@ -52,7 +56,21 @@ def get_picture_by_id(id):
 ######################################################################
 @app.route("/picture", methods=["POST"])
 def create_picture():
-    pass
+    new_picture = request.json
+    is_already_exists = False
+    if not new_picture:
+        return {"message": "Invalid input parameter"}, 422
+    for picture in data:
+        if picture['id'] == new_picture['id']:
+            is_already_exists = True
+    if is_already_exists:
+        return {"Message": f"picture with id {picture['id']} already present"}, 302
+    try:
+        data.append(new_picture)
+    except NameError:
+        return {"message": "data not defined"}, 500
+
+    return {"message": f"{new_picture['id']}"}, 201
 
 ######################################################################
 # UPDATE A PICTURE
@@ -61,11 +79,26 @@ def create_picture():
 
 @app.route("/picture/<int:id>", methods=["PUT"])
 def update_picture(id):
-    pass
+    new_picture = request.json
+    for picture in data:
+        if picture['id'] == new_picture['id']:
+            picture = new_picture
+            return {"message": "Picture updated"}, 200
+    return {"message": "picture not found"}, 404
+
 
 ######################################################################
 # DELETE A PICTURE
 ######################################################################
 @app.route("/picture/<int:id>", methods=["DELETE"])
 def delete_picture(id):
-    pass
+    idx_to_delete = None
+
+    for idx, picture in enumerate(data):
+        if picture['id'] == id:
+            idx_to_delete = idx
+
+    if idx_to_delete is not None:
+        del data[idx_to_delete]      
+        return {}, 204
+    return {"message": "picture not found"}, 404
